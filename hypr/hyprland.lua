@@ -81,7 +81,7 @@ hl.bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 hl.bind(mod .. " + R", hl.dsp.submap("resize"))
 
-hl.define_submap("resize", "reset", function()
+hl.define_submap("resize", function()
     hl.bind("h", hl.dsp.window.resize({ x = -10, y = 0,   relative = true }), { repeating = true })
     hl.bind("l", hl.dsp.window.resize({ x = 10,  y = 0,   relative = true }), { repeating = true })
     hl.bind("k", hl.dsp.window.resize({ x = 0,   y = -10, relative = true }), { repeating = true })
