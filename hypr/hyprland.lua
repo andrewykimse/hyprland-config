@@ -56,6 +56,7 @@ hl.bind(mod .. " + Q", hl.dsp.window.close())
 hl.bind(mod .. " + SHIFT + E", hl.dsp.exit())
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
+hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " -e btop"))
 
 hl.bind(mod .. " + h", hl.dsp.focus({ direction = "left" }))
 hl.bind(mod .. " + l", hl.dsp.focus({ direction = "right" }))
