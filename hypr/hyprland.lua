@@ -38,6 +38,11 @@ hl.config({
             natural_scroll = true,
         },
     },
+    plugin = {
+        scrolling = {
+            column_default_width = "onethird",
+        },
+    },
 })
 
 -- Animations
