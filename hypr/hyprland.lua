@@ -23,7 +23,7 @@ hl.config({
             active_border   = { colors = { "rgba(bd93f9ee)", "rgba(ff79c6ee)" }, angle = 45 },
             inactive_border = "rgba(44475aaa)",
         },
-        layout      = "dwindle",
+        layout      = "scrolling",
     },
     decoration = {
         rounding = 6,
@@ -58,13 +58,13 @@ hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " -e btop"))
 
-hl.bind(mod .. " + h", hl.dsp.focus({ direction = "left" }))
-hl.bind(mod .. " + l", hl.dsp.focus({ direction = "right" }))
+hl.bind(mod .. " + h", hl.dsp.layout("focus l"))
+hl.bind(mod .. " + l", hl.dsp.layout("focus r"))
 hl.bind(mod .. " + k", hl.dsp.focus({ direction = "up" }))
 hl.bind(mod .. " + j", hl.dsp.focus({ direction = "down" }))
 
-hl.bind(mod .. " + CTRL + h", hl.dsp.window.move({ direction = "left" }))
-hl.bind(mod .. " + CTRL + l", hl.dsp.window.move({ direction = "right" }))
+hl.bind(mod .. " + CTRL + h", hl.dsp.layout("swapcol l"))
+hl.bind(mod .. " + CTRL + l", hl.dsp.layout("swapcol r"))
 hl.bind(mod .. " + CTRL + k", hl.dsp.window.move({ direction = "up" }))
 hl.bind(mod .. " + CTRL + j", hl.dsp.window.move({ direction = "down" }))
 
