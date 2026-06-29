@@ -38,10 +38,8 @@ hl.config({
             natural_scroll = true,
         },
     },
-    plugin = {
-        scrolling = {
-            column_default_width = "onethird",
-        },
+    scrolling = {
+        column_width = 0.333,
     },
 })
 
