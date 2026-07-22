@@ -61,7 +61,7 @@ hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " -e btop"))
 hl.bind(mod .. " + C", hl.dsp.exec_cmd(claude_here))
-hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/new-browser-window.sh"))
+hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(browser))
 
 hl.bind(mod .. " + h", hl.dsp.layout("focus l"))
 hl.bind(mod .. " + l", hl.dsp.layout("focus r"))
