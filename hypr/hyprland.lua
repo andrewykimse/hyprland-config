@@ -87,6 +87,19 @@ hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(
     "mkdir -p ~/Videos; out=~/Videos/$(date +%Y-%m-%d-%H%M%S).mp4; " ..
     "region=$(slurp) || exit; notify-send 'Recording started' \"$out\"; " ..
     "wf-recorder -g \"$region\" -f \"$out\""))
+-- wf-recorder cannot capture a toplevel directly, so feed the geometry of every
+-- window on a visible workspace to slurp -r and record the box that gets picked.
+hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(
+    "pgrep -x wf-recorder >/dev/null && notify-send 'Already recording' && exit; " ..
+    "mkdir -p ~/Videos; out=~/Videos/$(date +%Y-%m-%d-%H%M%S).mp4; " ..
+    "vis=$(hyprctl -j monitors | jq -r '[.[].activeWorkspace.id]|join(\",\")'); " ..
+    "boxes=$(hyprctl -j clients | jq -r --arg v \"$vis\" " ..
+    "'($v|split(\",\")|map(tonumber)) as $w | .[] " ..
+    "| select(.mapped and (.workspace.id as $x | $w | index($x))) " ..
+    "| [(.at|map(tostring)|join(\",\")),(.size|map(tostring)|join(\"x\"))]|join(\" \")'); " ..
+    "region=$(printf '%s\\n' \"$boxes\" | slurp -r) || exit; " ..
+    "notify-send 'Recording window' \"$out\"; " ..
+    "wf-recorder -g \"$region\" -f \"$out\""))
 hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(
     "pkill -INT -x wf-recorder && notify-send 'Recording saved' || notify-send 'Not recording'"))
 
