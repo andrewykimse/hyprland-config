@@ -81,6 +81,15 @@ end
 hl.bind("Print", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 hl.bind(mod .. " + S", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 
+-- Recording has no on-screen indicator, so notify on start and stop.
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(
+    "pgrep -x wf-recorder >/dev/null && notify-send 'Already recording' && exit; " ..
+    "mkdir -p ~/Videos; out=~/Videos/$(date +%Y-%m-%d-%H%M%S).mp4; " ..
+    "region=$(slurp) || exit; notify-send 'Recording started' \"$out\"; " ..
+    "wf-recorder -g \"$region\" -f \"$out\""))
+hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(
+    "pkill -INT -x wf-recorder && notify-send 'Recording saved' || notify-send 'Not recording'"))
+
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
