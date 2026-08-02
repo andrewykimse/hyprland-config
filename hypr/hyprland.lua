@@ -53,20 +53,17 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 2, bezier = "snap" }
 hl.animation({ leaf = "fade", enabled = true, speed = 2, bezier = "default" })
 hl.animation({ leaf = "border", enabled = true, speed = 8, bezier = "default" })
 
--- Window rules
-hl.window_rule({
-    name     = "btop-min-size",
-    match    = { class = "com.btop" },
-    min_size = { 80, 40 },
-})
-
 -- Keybinds
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mod .. " + Q", hl.dsp.window.close())
 hl.bind(mod .. " + SHIFT + E", hl.dsp.exit())
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
-hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " --class=com.btop -e btop"))
+-- btop needs 80 columns and refuses to draw below that. A scrolling-layout column
+-- (column_width 0.333) is ~835px here, which at the default font size is only 77,
+-- so shrink the font for this window to buy headroom. minsize can't help: it is in
+-- pixels and only applies to floating windows.
+hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " --class=com.btop --font-size=10 -e btop"))
 hl.bind(mod .. " + C", hl.dsp.exec_cmd(claude_here))
 hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(browser))
 
