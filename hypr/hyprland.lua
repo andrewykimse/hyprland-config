@@ -57,7 +57,9 @@ local function fit_scrolling_columns()
     if count == 0 then return end
     local width = string.format("%.4f", 1 / math.min(count, 3))
     hl.dispatch(hl.dsp.layout("colresize all " .. width))
-    hl.dispatch(hl.dsp.layout("fit all"))
+    if count <= 3 then
+        hl.dispatch(hl.dsp.layout("fit all"))
+    end
 end
 
 for _, event in ipairs({ "window.open", "window.close", "window.destroy", "window.move_to_workspace", "workspace.active" }) do
