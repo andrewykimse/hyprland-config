@@ -43,6 +43,26 @@ hl.config({
     },
 })
 
+-- Auto-fit column width to the number of open windows on a workspace, up to
+-- 3 columns; beyond that, columns stay at 1/3 width and scroll off-screen.
+local function fit_scrolling_columns()
+    local ws = hl.get_active_workspace()
+    if not ws then return end
+    local count = 0
+    for _, w in ipairs(hl.get_workspace_windows(ws)) do
+        if w.mapped and not w.floating then
+            count = count + 1
+        end
+    end
+    if count == 0 then return end
+    local width = string.format("%.4f", 1 / math.min(count, 3))
+    hl.dispatch(hl.dsp.layout("colresize all " .. width))
+end
+
+for _, event in ipairs({ "window.open", "window.close", "window.destroy", "window.move_to_workspace", "workspace.active" }) do
+    hl.on(event, fit_scrolling_columns)
+end
+
 -- Animations
 hl.curve("snap", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.0 } } })
 
