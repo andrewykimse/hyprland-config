@@ -41,6 +41,7 @@ Item {
     readonly property bool powerOpen: surface === "power"
     readonly property bool mediaOpen: surface === "media"
     readonly property bool linkOpen: surface === "link"
+    readonly property bool batteryOpen: surface === "battery"
     readonly property bool hasMedia: Mpris.players.values.length > 0
     readonly property bool hasBattery: UPower.displayDevice.isLaptopBattery && UPower.displayDevice.isPresent
     readonly property int batteryPct: Math.round(UPower.displayDevice.percentage * 100)
@@ -69,6 +70,8 @@ Item {
     readonly property real powerH: 150 * s
     readonly property real mediaW: 390 * s
     readonly property real mediaH: 150 * s
+    readonly property real batteryW: 260 * s
+    readonly property real batteryH: 178 * s
     readonly property real toastW: 342 * s
     readonly property real restCorner: 18 * s
     readonly property real openCorner: 22 * s
@@ -78,12 +81,13 @@ Item {
         : (clipboardOpen ? "clipboard"
         : (wallpaperOpen ? "wallpaper"
         : (powerOpen ? "power"
+        : (batteryOpen ? "battery"
         : (mediaOpen ? "media"
         : (mixerOpen ? "mixer"
         : (linkOpen ? "link"
         : (osdActive && !held ? "osd"
         : (toastActive && !held ? "toast"
-        : (expanded ? "hover" : "rest"))))))))))
+        : (expanded ? "hover" : "rest")))))))))))
 
     signal requestSurface(string name)
     signal requestClose()
@@ -162,6 +166,7 @@ Item {
         clipboard: () => Qt.size(clipboardW, clipboardH),
         wallpaper: () => Qt.size(wallpaperW, wallpaperH),
         power:     () => Qt.size(powerW, powerH),
+        battery:   () => Qt.size(batteryW, batteryH),
         media:     () => Qt.size(mediaW, mediaH),
         mixer:     () => Qt.size(mixerW, mixerH),
         link:      () => Qt.size(link.desiredW, link.implicitHeight + 26 * s),
@@ -506,28 +511,43 @@ Item {
                     anchors.centerIn: parent
                     spacing: 8 * pill.s
 
-                    Column {
-                        id: hoverClock
+                    Item {
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2 * pill.s
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: clock.hhmm
-                            color: Theme.cream
-                            font.family: Theme.font
-                            font.pixelSize: 18 * pill.s
-                            font.weight: Font.DemiBold
-                            font.features: { "tnum": 1 }
+                        width: hoverClock.implicitWidth
+                        height: hoverClock.implicitHeight
+
+                        Column {
+                            id: hoverClock
+                            anchors.centerIn: parent
+                            spacing: 2 * pill.s
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: clock.hhmm
+                                color: Theme.cream
+                                font.family: Theme.font
+                                font.pixelSize: 18 * pill.s
+                                font.weight: Font.DemiBold
+                                font.features: { "tnum": 1 }
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: clock.date
+                                color: Theme.dim
+                                font.family: Theme.font
+                                font.pixelSize: 8.5 * pill.s
+                                font.weight: Font.Medium
+                                font.capitalization: Font.AllUppercase
+                                font.letterSpacing: 1.6 * pill.s
+                            }
                         }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: clock.date
-                            color: Theme.dim
-                            font.family: Theme.font
-                            font.pixelSize: 8.5 * pill.s
-                            font.weight: Font.Medium
-                            font.capitalization: Font.AllUppercase
-                            font.letterSpacing: 1.6 * pill.s
+
+                        MouseArea {
+                            anchors.centerIn: parent
+                            width: hoverClock.implicitWidth + 14 * pill.s
+                            height: hoverClock.implicitHeight + 10 * pill.s
+                            enabled: hover.live
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: pill.requestSurface("calendar")
                         }
                     }
 
@@ -546,22 +566,23 @@ Item {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: pill.batteryPct + "%"
-                            color: Theme.dim
+                            color: batteryArea.containsMouse ? Theme.cream : Theme.dim
                             font.family: Theme.font
                             font.pixelSize: 10 * pill.s
                             font.weight: Font.Medium
                             font.features: { "tnum": 1 }
                         }
-                    }
-                }
 
-                MouseArea {
-                    anchors.centerIn: parent
-                    width: clockRow.implicitWidth + 22 * pill.s
-                    height: clockRow.implicitHeight + 10 * pill.s
-                    enabled: hover.live
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: pill.requestSurface("calendar")
+                        MouseArea {
+                            id: batteryArea
+                            anchors.fill: parent
+                            anchors.margins: -6 * pill.s
+                            hoverEnabled: true
+                            enabled: hover.live
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: pill.requestSurface("battery")
+                        }
+                    }
                 }
             }
 
@@ -775,6 +796,14 @@ Item {
         id: power
         s: pill.s
         open: pill.powerOpen
+        morphCloseness: pill.morphCloseness
+        onRequestClose: pill.requestClose()
+    }
+
+    Battery {
+        id: battery
+        s: pill.s
+        open: pill.batteryOpen
         morphCloseness: pill.morphCloseness
         onRequestClose: pill.requestClose()
     }
