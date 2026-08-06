@@ -33,7 +33,9 @@ PillSurface {
         }
         if (Devices.hasBacklight)
             out.push(blFader);
-        out.push(vibFader, volFader, micFader);
+        if (Devices.hasVibrance)
+            out.push(vibFader);
+        out.push(volFader, micFader);
         return out;
     }
     readonly property bool surfaceHovered: hoverTracker.hovered
@@ -285,10 +287,11 @@ PillSurface {
         }
         VFader {
             id: vibFader
+            visible: Devices.hasVibrance
             width: faderRow.colW
             s: root.s
             icon: "monitor"
-            focused: root.focusIndex === root.faderCount - 3
+            focused: root.focusIndex === root.faders.indexOf(vibFader)
             value: Devices.vibrance / 100
             valueLabel: Devices.vibrance + "%"
             onMoved: (v) => Devices.vibrance = Math.round(v * 100)
