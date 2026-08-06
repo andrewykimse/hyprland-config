@@ -551,32 +551,40 @@ Item {
                         }
                     }
 
-                    Row {
+                    Item {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: pill.hasBattery
-                        spacing: 5 * pill.s
+                        width: batteryRow.implicitWidth
+                        height: batteryRow.implicitHeight
 
-                        Filament {
-                            anchors.verticalCenter: parent.verticalCenter
-                            s: pill.s
-                            kind: "battery"
-                            level: pill.batteryPct / 100
-                        }
+                        Row {
+                            id: batteryRow
+                            anchors.centerIn: parent
+                            spacing: 5 * pill.s
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: pill.batteryPct + "%"
-                            color: batteryArea.containsMouse ? Theme.cream : Theme.dim
-                            font.family: Theme.font
-                            font.pixelSize: 10 * pill.s
-                            font.weight: Font.Medium
-                            font.features: { "tnum": 1 }
+                            Filament {
+                                anchors.verticalCenter: parent.verticalCenter
+                                s: pill.s
+                                kind: "battery"
+                                level: pill.batteryPct / 100
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: pill.batteryPct + "%"
+                                color: batteryArea.containsMouse ? Theme.cream : Theme.dim
+                                font.family: Theme.font
+                                font.pixelSize: 10 * pill.s
+                                font.weight: Font.Medium
+                                font.features: { "tnum": 1 }
+                            }
                         }
 
                         MouseArea {
                             id: batteryArea
-                            anchors.fill: parent
-                            anchors.margins: -6 * pill.s
+                            anchors.centerIn: parent
+                            width: batteryRow.implicitWidth + 12 * pill.s
+                            height: batteryRow.implicitHeight + 10 * pill.s
                             hoverEnabled: true
                             enabled: hover.live
                             cursorShape: Qt.PointingHandCursor
