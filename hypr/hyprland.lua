@@ -6,6 +6,10 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle")
     hl.exec_cmd("wl-paste --watch cliphist store")
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
+    hl.exec_cmd("awww-daemon")
+    hl.exec_cmd("quickshell -p " .. os.getenv("HOME") .. "/.config/quickshell/pill")
+    hl.exec_cmd("quickshell -p " .. os.getenv("HOME") .. "/.config/quickshell/launcher")
+    hl.exec_cmd("quickshell -p " .. os.getenv("HOME") .. "/.config/quickshell/rishot")
 end)
 
 -- Lid switch
@@ -146,3 +150,31 @@ hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ to
     { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl s 5%+"), { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"), { locked = true, repeating = true })
+
+-- Quickshell
+local scripts = os.getenv("HOME") .. "/.config/hypr/scripts"
+hl.bind(mod .. " + Space",  hl.dsp.exec_cmd(scripts .. "/launcher.sh"))
+hl.bind(mod .. " + V",      hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
+hl.bind(mod .. " + B",      hl.dsp.exec_cmd(scripts .. "/wallpaper.sh"))
+hl.bind(mod .. " + W",      hl.dsp.exec_cmd(scripts .. "/wallpaper-picker.sh"))
+
+hl.bind(mod .. " + Tab", function()
+    hl.dispatch(hl.dsp.submap("hyprsphere"))
+    hl.dispatch(hl.dsp.exec_cmd("qs -c hyprsphere ipc call hyprsphere toggle"))
+end)
+
+hl.define_submap("hyprsphere", function()
+    hl.bind(mod .. " + Super_L", function()
+        hl.dispatch(hl.dsp.exec_cmd("qs -c hyprsphere ipc call hyprsphere commit"))
+        hl.dispatch(hl.dsp.submap("reset"))
+    end, { release = true })
+    hl.bind(mod .. " + Super_R", function()
+        hl.dispatch(hl.dsp.exec_cmd("qs -c hyprsphere ipc call hyprsphere commit"))
+        hl.dispatch(hl.dsp.submap("reset"))
+    end, { release = true })
+
+    hl.bind("Escape", function()
+        hl.dispatch(hl.dsp.exec_cmd("qs -c hyprsphere ipc call hyprsphere cancel"))
+        hl.dispatch(hl.dsp.submap("reset"))
+    end)
+end)
