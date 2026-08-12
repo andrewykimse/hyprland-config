@@ -12,6 +12,73 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("quickshell -p " .. os.getenv("HOME") .. "/.config/quickshell/rishot")
 end)
 
+-- New windows land on whatever workspace is focused when they map, not the
+-- workspace of whatever spawned them. Walk up the process tree from a new
+-- window's pid, and if some ancestor is a process we've seen focused before,
+-- move the window to the workspace it was focused on. Ghostty (and anything
+-- else single-instance) runs every tab/window under one pid, so tracking
+-- "last focused workspace per pid" -- rather than "current workspace of any
+-- window with this pid" -- is what picks the right tab instead of an
+-- arbitrary one. Processes that daemonize/reparent before their window maps,
+-- or that have no such ancestor at all (launched from a keybind or app
+-- menu), fall through to the default placement.
+--
+-- A brand-new window fires window.active (grabbing focus) before window.open
+-- fires for it, so by the time window.open runs, pid_focus[pid].current is
+-- already the new window itself. current/previous keeps the prior window's
+-- workspace around for that one tick so a same-pid match doesn't just match
+-- the window against itself.
+local pid_focus = {}
+
+local function remember_focus(win)
+    if not (win.pid and win.workspace) then return end
+    local rec = pid_focus[win.pid]
+    if rec and rec.current.address ~= win.address then
+        rec.previous = rec.current
+    end
+    pid_focus[win.pid] = { current = { workspace = win.workspace.id, address = win.address }, previous = rec and rec.previous }
+end
+
+for _, w in ipairs(hl.get_windows()) do
+    remember_focus(w)
+end
+
+hl.on("window.active", remember_focus)
+
+hl.on("window.open", function(win)
+    if not win.pid or not win.address then return end
+
+    local function parent_pid(pid)
+        local f = io.open("/proc/" .. pid .. "/stat", "r")
+        if not f then return nil end
+        local line = f:read("*l")
+        f:close()
+        if not line then return nil end
+        local rest = line:match("%)%s*(.*)")
+        local ppid = rest and rest:match("^%S+%s+(%d+)")
+        return ppid and tonumber(ppid)
+    end
+
+    local function last_other_workspace(pid)
+        local rec = pid_focus[pid]
+        if not rec then return nil end
+        if rec.current.address ~= win.address then return rec.current.workspace end
+        return rec.previous and rec.previous.workspace
+    end
+
+    local pid, target = win.pid, nil
+    for _ = 1, 20 do
+        target = last_other_workspace(pid)
+        if target then break end
+        pid = parent_pid(pid)
+        if not pid or pid <= 1 then break end
+    end
+
+    if target and (not win.workspace or win.workspace.id ~= target) then
+        hl.dispatch(hl.dsp.window.move({ workspace = target, window = "address:" .. win.address }))
+    end
+end)
+
 -- Lid switch
 hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd("hyprctl keyword monitor \"eDP-1, disable\""), { locked = true })
 hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl keyword monitor \"eDP-1, preferred, auto, 2\""),
