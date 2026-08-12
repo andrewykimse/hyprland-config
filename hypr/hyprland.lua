@@ -15,28 +15,25 @@ end)
 -- New windows land on whatever workspace is focused when they map, not the
 -- workspace of whatever spawned them. Walk up the process tree from a new
 -- window's pid, and if some ancestor is a process we've seen focused before,
--- move the window to the workspace it was focused on. Ghostty (and anything
--- else single-instance) runs every tab/window under one pid, so tracking
--- "last focused workspace per pid" -- rather than "current workspace of any
--- window with this pid" -- is what picks the right tab instead of an
--- arbitrary one. Processes that daemonize/reparent before their window maps,
--- or that have no such ancestor at all (launched from a keybind or app
--- menu), fall through to the default placement.
+-- move the window to the workspace it was focused on. Processes that
+-- daemonize/reparent before their window maps, or that have no such
+-- ancestor at all (launched from a keybind or app menu), fall through to
+-- the default placement.
 --
--- A brand-new window fires window.active (grabbing focus) before window.open
--- fires for it, so by the time window.open runs, pid_focus[pid].current is
--- already the new window itself. current/previous keeps the prior window's
--- workspace around for that one tick so a same-pid match doesn't just match
--- the window against itself.
+-- The walk starts at the window's *parent*, deliberately skipping the
+-- window's own pid. Ghostty (and anything else single-instance) hands new
+-- windows to one already-running process, so a terminal you just opened
+-- with a keybind shares its pid with whatever terminal window was last
+-- focused, possibly on another workspace. Matching on the window's own pid
+-- would "route" it back there, which is indistinguishable from -- and
+-- overridden by -- the far more common case of just wanting a new terminal
+-- on the workspace you're already on. Only a genuine ancestor (a different
+-- process) counts as evidence of who spawned this window.
 local pid_focus = {}
 
 local function remember_focus(win)
     if not (win.pid and win.workspace) then return end
-    local rec = pid_focus[win.pid]
-    if rec and rec.current.address ~= win.address then
-        rec.previous = rec.current
-    end
-    pid_focus[win.pid] = { current = { workspace = win.workspace.id, address = win.address }, previous = rec and rec.previous }
+    pid_focus[win.pid] = win.workspace.id
 end
 
 for _, w in ipairs(hl.get_windows()) do
@@ -59,19 +56,12 @@ hl.on("window.open", function(win)
         return ppid and tonumber(ppid)
     end
 
-    local function last_other_workspace(pid)
-        local rec = pid_focus[pid]
-        if not rec then return nil end
-        if rec.current.address ~= win.address then return rec.current.workspace end
-        return rec.previous and rec.previous.workspace
-    end
-
-    local pid, target = win.pid, nil
+    local pid, target = parent_pid(win.pid), nil
     for _ = 1, 20 do
-        target = last_other_workspace(pid)
+        if not pid or pid <= 1 then break end
+        target = pid_focus[pid]
         if target then break end
         pid = parent_pid(pid)
-        if not pid or pid <= 1 then break end
     end
 
     if target and (not win.workspace or win.workspace.id ~= target) then
