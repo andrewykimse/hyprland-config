@@ -75,7 +75,15 @@ hl.on("window.open", function(win)
     end
 
     if target and (not win.workspace or win.workspace.id ~= target) then
+        -- A newly opened window grabs input focus, and moving the focused
+        -- window to another workspace drags the monitor's view along with
+        -- it. Since the point here is to keep working undisturbed on
+        -- whatever workspace was actually active, switch straight back.
+        local active_ws = hl.get_active_workspace()
         hl.dispatch(hl.dsp.window.move({ workspace = target, window = "address:" .. win.address }))
+        if active_ws and active_ws.id ~= target then
+            hl.dispatch(hl.dsp.focus({ workspace = active_ws.id }))
+        end
     end
 end)
 
