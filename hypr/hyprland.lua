@@ -14,21 +14,36 @@ end)
 
 -- New windows land on whatever workspace is focused when they map, not the
 -- workspace of whatever spawned them. Walk up the process tree from a new
--- window's pid, and if some ancestor is a process we've seen focused before,
--- move the window to the workspace it was focused on. Processes that
--- daemonize/reparent before their window maps, or that have no such
--- ancestor at all (launched from a keybind or app menu), fall through to
--- the default placement.
+-- window's pid, and if some ancestor tells us where it belongs, move the
+-- window there instead. Processes that daemonize/reparent before their
+-- window maps, or that have no such ancestor at all (launched from a
+-- keybind or app menu), fall through to the default placement.
 --
--- The walk starts at the window's *parent*, deliberately skipping the
--- window's own pid. Ghostty (and anything else single-instance) hands new
--- windows to one already-running process, so a terminal you just opened
--- with a keybind shares its pid with whatever terminal window was last
--- focused, possibly on another workspace. Matching on the window's own pid
--- would "route" it back there, which is indistinguishable from -- and
--- overridden by -- the far more common case of just wanting a new terminal
--- on the workspace you're already on. Only a genuine ancestor (a different
--- process) counts as evidence of who spawned this window.
+-- Two sources of "where it belongs", checked per ancestor as we walk up:
+--
+-- 1. HYPR_SPAWN_WORKSPACE in the ancestor's environment (see shell.nix):
+--    each shell tags itself with the workspace it was opened on, so any
+--    descendant of a shell carries a precise answer regardless of pid.
+--    This is what disambiguates Ghostty tabs -- see point 2.
+-- 2. pid_focus, our own record of the last workspace a pid was focused on.
+--    This is the fallback for windows with no shell ancestor at all
+--    (launched from an app menu/launcher, or a shell that predates this
+--    tagging). The walk starts at the window's *parent*, deliberately
+--    skipping the window's own pid: Ghostty (and anything else
+--    single-instance) hands new windows to one already-running process, so
+--    a terminal you just opened with a keybind shares its pid with
+--    whatever terminal window was last focused, possibly on another
+--    workspace. Matching on the window's own pid would "route" it back
+--    there -- indistinguishable from, and overridden by, the far more
+--    common case of just wanting a new terminal where you already are.
+--
+-- pid_focus is also the reason (1) is necessary rather than sufficient on
+-- its own: Ghostty is single-instance, so every tab/window it owns shares
+-- one pid, and pid_focus (keyed by pid) can't tell tabs apart -- it just
+-- remembers whichever tab was *last focused*, which drifts to wherever
+-- you're currently typing if you have more than one tab open. A shell's
+-- own HYPR_SPAWN_WORKSPACE sidesteps that entirely by naming the workspace
+-- directly, so it's checked first and wins whenever it's present.
 local pid_focus = {}
 
 local function remember_focus(win)
@@ -56,13 +71,25 @@ hl.on("window.open", function(win)
         return ppid and tonumber(ppid)
     end
 
-    local pid, target = parent_pid(win.pid), nil
+    local function spawn_env_workspace(pid)
+        local f = io.open("/proc/" .. pid .. "/environ", "rb")
+        if not f then return nil end
+        local data = f:read("*a")
+        f:close()
+        if not data then return nil end
+        local ws = data:match("HYPR_SPAWN_WORKSPACE=(%d+)")
+        return ws and tonumber(ws)
+    end
+
+    local pid, target, fallback = parent_pid(win.pid), nil, nil
     for _ = 1, 20 do
         if not pid or pid <= 1 then break end
-        target = pid_focus[pid]
+        target = spawn_env_workspace(pid)
         if target then break end
+        fallback = fallback or pid_focus[pid]
         pid = parent_pid(pid)
     end
+    target = target or fallback
 
     if target and (not win.workspace or win.workspace.id ~= target) then
         -- A newly opened window grabs input focus, and moving the focused
