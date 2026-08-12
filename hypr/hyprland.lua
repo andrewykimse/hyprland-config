@@ -166,6 +166,7 @@ hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
 -- so shrink the font for this window to buy headroom. minsize can't help: it is in
 -- pixels and only applies to floating windows.
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " --class=com.btop --font-size=10 -e btop"))
+hl.bind(mod .. " + M", hl.dsp.exec_cmd(terminal .. " --class=com.hyprmoncfg -e hyprmoncfg"))
 hl.bind(mod .. " + C", hl.dsp.exec_cmd(claude_here))
 hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(browser))
 
