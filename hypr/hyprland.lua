@@ -1,3 +1,6 @@
+-- Monitor layout is managed by hyprmoncfg, which writes ~/.config/hypr/monitors.lua.
+require("monitors")
+
 -- Startup
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_DATA_DIRS")
