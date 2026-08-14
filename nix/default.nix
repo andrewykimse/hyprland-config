@@ -7,6 +7,12 @@ let
   cfg = config.hyprland-config;
 in
 {
+  imports = [
+    ./args.nix
+    ./packages.nix
+    ./services.nix
+  ];
+
   options.hyprland-config = {
     enable = lib.mkEnableOption "Hyprland configuration";
 
