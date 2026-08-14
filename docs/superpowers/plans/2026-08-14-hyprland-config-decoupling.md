@@ -15,6 +15,7 @@
 - Work on branch `decouple-hyprland-config` in `/home/akim7/sources/hyprland-config`. The spec is already committed there as `d1e4dce`.
 - **This repo has no test framework and no CI.** The verification cycle is: `nix flake check`, then build the host activation package, then `diff` the generated output against the currently-live config. That diff **is** the test. Do not invent a test framework.
 - `dotfiles` pins this repo by remote ref (`git+ssh://git@github.com/andrewykimse/hyprland-config`), so local edits are invisible to a `nix build` unless `--override-input hyprland-config path:/home/akim7/sources/hyprland-config` is passed. **Every build command in this plan uses that flag.** Do not push to make a build work.
+- **Every build also needs `--impure`.** The `nixgl` input reads `builtins.currentTime` (`nixGL.nix:224`) to force rebuilds, which pure evaluation rejects with `error: attribute 'currentTime' missing`. This is pre-existing and unrelated to our changes — the baseline build fails the same way without it.
 - Current live host is `akim7@akim7-work-desktop`; current home-manager generation is **96**. Rollback is `home-manager switch --rollback`.
 - Nix is purely functional: `nix build` produces `./result` and mutates nothing. Only `home-manager switch` touches the live session. **No task in this plan runs `home-manager switch`** — that is deferred to the user in Task 8.
 - Do not touch `dotfiles/modules/quickshell.nix`. It reads 9 files from `hyprland-config/quickshell/` and is explicitly out of scope.
@@ -103,7 +104,7 @@ Expected: count is `62`. The grep shows **only** `65	E` (SUPER+SHIFT+E). The abs
 
 ```bash
 cd ~/sources/dotfiles
-nix build --no-link --print-out-paths \
+nix build --impure --no-link --print-out-paths \
   .#homeConfigurations."akim7@akim7-work-desktop".activationPackage \
   > /tmp/hypr-baseline/activation-path.txt
 cat /tmp/hypr-baseline/activation-path.txt
@@ -1086,7 +1087,7 @@ git rm modules/hyprland.nix
 cd ~/sources/dotfiles
 for h in "akim7@akim7-work-desktop" "akim7@akim7-work-laptop" "andrewkim@firelink"; do
   echo "=== $h ==="
-  nix build --no-link --print-out-paths \
+  nix build --impure --no-link --print-out-paths \
     --override-input hyprland-config path:/home/akim7/sources/hyprland-config \
     ".#homeConfigurations.\"$h\".activationPackage" || echo "BUILD FAILED: $h"
 done
@@ -1098,7 +1099,7 @@ Expected: three store paths, no `BUILD FAILED`. All three must build — a broke
 
 ```bash
 cd ~/sources/dotfiles
-nix build -o /tmp/hypr-new \
+nix build --impure -o /tmp/hypr-new \
   --override-input hyprland-config path:/home/akim7/sources/hyprland-config \
   .#homeConfigurations."akim7@akim7-work-desktop".activationPackage
 diff /tmp/hypr-baseline/generated/hyprland.lua \
@@ -1132,7 +1133,7 @@ The one host where `lockCommand` differs — confirm the substitution actually h
 
 ```bash
 cd ~/sources/dotfiles
-nix build -o /tmp/hypr-laptop \
+nix build --impure -o /tmp/hypr-laptop \
   --override-input hyprland-config path:/home/akim7/sources/hyprland-config \
   .#homeConfigurations."akim7@akim7-work-laptop".activationPackage
 grep -c '/nix/store/.*/bin/hyprlock' /tmp/hypr-laptop/home-files/.config/hypr/hypridle.conf
@@ -1192,7 +1193,7 @@ Report to the user, honestly separating the two:
 ```bash
 # switch (requires pushing the branch first, or keep using --override-input)
 cd ~/sources/dotfiles
-home-manager switch --flake .#"akim7@akim7-work-desktop" \
+home-manager switch --impure --flake .#"akim7@akim7-work-desktop" \
   --override-input hyprland-config path:/home/akim7/sources/hyprland-config
 
 # roll back to generation 96 if anything misbehaves
