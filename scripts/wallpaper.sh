@@ -17,7 +17,7 @@ case "$CMD" in
     _apply "$WALL_PATH"
     ;;
   random)
-    img=$(find "$HOME/sources/dotfiles/wallpapers" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.png" \) 2>/dev/null | shuf -n 1)
+    img=$(find "${HYPR_WALLPAPER_DIR:-$HOME/sources/dotfiles/wallpapers}" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.png" \) 2>/dev/null | shuf -n 1)
     [ -n "$img" ] && _apply "$img"
     ;;
   *) echo "Unknown command: $CMD" >&2; exit 1 ;;
