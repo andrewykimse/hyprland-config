@@ -307,17 +307,40 @@ Move the parts with no Lua interaction first. Verified beforehand that `pkgs.hyp
 - Consumes: `options.hyprland-config` from Task 2.
 - Produces: `_module.args.wf-recorder` (declared in `nix/default.nix`) — the ffmpeg_6-pinned derivation, shared so Task 4's record scripts use the identical build rather than overriding it a second time. Both `packages.nix` and `scripts.nix` take it as a function argument.
 
-- [ ] **Step 0: Declare the shared `wf-recorder` pin in `nix/default.nix`**
+- [ ] **Step 0: Declare the shared `wf-recorder` pin in `nix/args.nix`**
 
-Add to the module body, as a sibling of `imports`/`options`/`config` (module args are set outside `config`, so this is *not* inside the `mkIf`):
+**Corrected during execution.** This cannot go in `nix/default.nix`: the module
+system rejects a top-level `_module` in any file that also declares
+`options`/`config` (`error: Module ... has an unsupported attribute '_module'`),
+and moving it inside `config` would make the argument unavailable while the
+modules consuming it are still being evaluated. It gets its own file with no
+`options`/`config` keys:
 
 ```nix
+# Shared derivations passed to the other module files as arguments.
+#
+# This file deliberately contains only `_module.args` and no `options`/`config`
+# keys: the module system rejects a top-level `_module` in any file that also
+# declares those, and putting it inside `config` would make the argument
+# unavailable while the modules that take it are still being evaluated.
+{ pkgs, ... }:
+
+{
   # wf-recorder 0.6.0 doesn't build against ffmpeg's default (9.0): it reads
   # AVCodec.sample_fmts, a field removed upstream. Pin ffmpeg_6 until
-  # wf-recorder is patched for the new API. Shared via _module.args so
-  # packages.nix and scripts.nix use one identical derivation.
+  # wf-recorder is patched for the new API. Shared so packages.nix (which
+  # installs it) and scripts.nix (which calls it) use one identical build.
   _module.args.wf-recorder = pkgs.wf-recorder.override { ffmpeg = pkgs.ffmpeg_6; };
+}
 ```
+
+Then `nix/default.nix` imports `./args.nix` first in its `imports` list.
+
+**Verification note:** `nix flake check` does NOT catch this class of error, and a
+bare `lib.evalModules` cannot evaluate this module at all (`services.nix` needs
+home-manager's `config.lib.dag` and `home.activation`). The real check is building
+an actual host with the module imported but `enable = false`, which also proves
+the `mkIf` guard makes it inert.
 
 - [ ] **Step 1: Write `nix/packages.nix`**
 
