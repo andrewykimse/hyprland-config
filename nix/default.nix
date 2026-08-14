@@ -1,7 +1,7 @@
 # Home-manager module for the Hyprland desktop. Owns everything Hyprland-related
 # so that this repo is self-contained: editing a script or keybind here takes
 # effect without touching the consuming dotfiles repo.
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, hyprScripts, ... }:
 
 let
   cfg = config.hyprland-config;
@@ -71,6 +71,43 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Populated by later tasks.
+    wayland.windowManager.hyprland = {
+      enable = true;
+      package = cfg.package;
+      configType = "lua";
+      settings = {
+        # These four become `local` declarations in the generated Lua preamble.
+        # Only values Nix must compute belong here; repo scripts resolve at
+        # runtime from ~/.config/hypr/scripts instead, so adding one needs no
+        # Nix change. hyprland.lua asserts each of these is set.
+        mod      = { _var = cfg.mod; };
+        terminal = { _var = cfg.terminal; };
+        lock     = { _var = cfg.lockCommand; };
+        browser  = { _var = "${hyprScripts.new-browser-window}"; };
+        monitor  = cfg.monitors;
+        env      = cfg.extraEnv ++ [
+          { _args = [ "HYPR_WALLPAPER_DIR" cfg.wallpaperDir ]; }
+        ];
+      };
+      extraConfig = builtins.readFile ../hypr/hyprland.lua
+        + lib.optionalString (cfg.extraLua != "") "\n${cfg.extraLua}";
+    };
+
+    xdg.configFile."hypr/hyprland.conf" = { text = "# See hyprland.lua"; force = true; };
+    xdg.configFile."hypr/hyprpaper.conf".source = ../hypr/hyprpaper.conf;
+    xdg.configFile."hypr/hyprlock.conf".source = ../hypr/hyprlock.conf;
+
+    # Generated rather than copied so lockCommand can be substituted: hosts
+    # without hyprlock on PATH need an absolute store path. Previously each such
+    # host duplicated this whole file, which meant edits to hypr/hypridle.conf
+    # silently did nothing there.
+    xdg.configFile."hypr/hypridle.conf".text =
+      builtins.replaceStrings [ "hyprlock" ] [ cfg.lockCommand ]
+        (builtins.readFile ../hypr/hypridle.conf);
+
+    xdg.configFile."hypr/scripts" = {
+      source = ../scripts;
+      recursive = true;
+    };
   };
 }
