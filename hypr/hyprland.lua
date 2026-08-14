@@ -188,7 +188,7 @@ hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " --class=com.btop --font-size=10 -e btop"))
 hl.bind(mod .. " + M", hl.dsp.exec_cmd(terminal .. " --class=com.hyprmoncfg -e hyprmoncfg"))
 hl.bind(mod .. " + C", hl.dsp.exec_cmd(claude_here))
-hl.bind(mod .. " + C", hl.dsp.exec_cmd(nvim_here))
+hl.bind(mod .. " + E", hl.dsp.exec_cmd(nvim_here))
 hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(browser))
 
 hl.bind(mod .. " + h", hl.dsp.layout("focus l"))
