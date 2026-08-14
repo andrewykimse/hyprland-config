@@ -1258,3 +1258,51 @@ Both are out of scope here, recorded so they are not lost:
 
 1. **Unify the duplicated screenshot/record logic.** `hypr/hyprland.lua:209-232` (inline shell for keybinds — has `notify-send` feedback, "already recording" guard, `slurp -r` window picker) and `nix/scripts.nix` (for desktop entries — has the `ffmpeg_6`-pinned `wf-recorder`, focused-output fix). Neither is a superset; unifying changes behaviour in both directions, so it needs its own commit and its own verification.
 2. **Migrate `dotfiles/modules/quickshell.nix`.** It reads 9 files from `hyprland-config/quickshell/` and needs `ricelin` + `hyprsphere` as inputs of this flake. Until then the goal "everything Hyprland-related lives here" is not fully met, and the `hyprsphere` startup line stays in dotfiles.
+
+---
+
+## Execution log
+
+Recorded during inline execution, 2026-08-14.
+
+### Corrections to the plan
+
+1. **All builds need `--impure`** (Global Constraints). The `nixgl` input reads
+   `builtins.currentTime`, which pure evaluation rejects. Pre-existing: the
+   baseline build fails identically without it.
+2. **`_module.args` needs its own file** (Task 3 Step 0). The module system
+   rejects a top-level `_module` in a file that also declares `options`/`config`.
+   Created `nix/args.nix`. Notably `nix flake check` does **not** catch this, and
+   bare `lib.evalModules` cannot evaluate this module at all — `services.nix`
+   needs home-manager's `config.lib.dag`. The working check is building a real
+   host with `enable = false`, which also proves `mkIf` makes the module inert.
+3. **`hyprsphere` startup hook landed in `quickshell.nix`, not a host file.** The
+   plan said "move into `extraLua`" without saying whose. Putting it in each host
+   would triplicate it; `quickshell.nix` owns `qs` and the hyprsphere QML, so it
+   sets `hyprland-config.extraLua` itself. `types.lines` merges the two
+   contributors (module default + quickshell) correctly.
+
+### The gate earned its keep
+
+The first Task 7 build passed all three host builds but the diff caught a
+**silently dropped `hl.on("hyprland.start", ...)` for hyprsphere** — SUPER+Tab
+would have been dead on all three hosts. Nothing else flagged it: the config
+built fine, evaluated fine, and the loss was at the tail of a 330-line generated
+file. This is the same failure shape as the original `nvim_here` bug, caught
+pre-switch this time.
+
+### Pre-existing issue found, not caused by this work
+
+`andrewkim@firelink`'s full activation package fails to build: `moonlight-qt`
+6.1.0 does not compile against the current ffmpeg (`release/ffmpeg.o` error).
+Confirmed pre-existing by reproducing with these changes stashed. Firelink's
+Hyprland config evaluates correctly and its Hyprland package builds; only the
+unrelated package in `home.packages` fails. Worth a separate fix.
+
+### Repo hygiene note
+
+The `dotfiles` commit was initially made on `main` and has been moved to a
+`decouple-hyprland-config` branch (`main` reset to `667c344`, unpushed so no
+published history was rewritten). That commit also swept up a pre-existing
+uncommitted `flake.lock` bump pointing `hyprland-config` at `1416c66`, which was
+not part of this work — see the handoff notes.
