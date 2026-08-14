@@ -10,6 +10,8 @@ in
   imports = [
     ./args.nix
     ./packages.nix
+    ./scripts.nix
+    ./desktop.nix
     ./services.nix
   ];
 
