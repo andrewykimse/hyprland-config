@@ -1,3 +1,15 @@
+-- Values injected as Lua locals by the home-manager module (nix/default.nix).
+-- Assert rather than let a nil silently drop the hl.bind that uses it: passing
+-- nil to a dispatcher makes the whole hl.bind call fail, so the key just never
+-- registers -- no error at config load, no log line, just a dead key.
+assert(mod, "mod not set by hyprland-config module")
+assert(terminal, "terminal not set by hyprland-config module")
+assert(lock, "lock not set by hyprland-config module")
+assert(browser, "browser not set by hyprland-config module")
+
+-- Scripts in this repo resolve at runtime, so adding one needs no Nix change.
+local scripts = os.getenv("HOME") .. "/.config/hypr/scripts"
+
 -- Monitor layout is managed by hyprmoncfg, which writes ~/.config/hypr/monitors.lua.
 require("monitors")
 
@@ -187,8 +199,8 @@ hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
 -- pixels and only applies to floating windows.
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " --class=com.btop --font-size=10 -e btop"))
 hl.bind(mod .. " + M", hl.dsp.exec_cmd(terminal .. " --class=com.hyprmoncfg -e hyprmoncfg"))
-hl.bind(mod .. " + C", hl.dsp.exec_cmd(claude_here))
-hl.bind(mod .. " + E", hl.dsp.exec_cmd(nvim_here))
+hl.bind(mod .. " + C", hl.dsp.exec_cmd(scripts .. "/claude-here.sh"))
+hl.bind(mod .. " + E", hl.dsp.exec_cmd(scripts .. "/nvim-here.sh"))
 hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(browser))
 
 hl.bind(mod .. " + h", hl.dsp.layout("focus l"))
@@ -249,7 +261,6 @@ hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl s 5%+"), { locked 
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"), { locked = true, repeating = true })
 
 -- Quickshell
-local scripts = os.getenv("HOME") .. "/.config/hypr/scripts"
 hl.bind(mod .. " + Space", hl.dsp.exec_cmd(scripts .. "/launcher.sh"))
 hl.bind(mod .. " + V", hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
 hl.bind(mod .. " + B", hl.dsp.exec_cmd(scripts .. "/wallpaper.sh"))

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-WP_DIR="$HOME/sources/dotfiles/wallpapers"
+WP_DIR="${HYPR_WALLPAPER_DIR:-$HOME/sources/dotfiles/wallpapers}"
 THUMB_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ricelin-wp-thumbs"
 mkdir -p "$THUMB_DIR"
 for thumb in "$THUMB_DIR"/*.png; do
