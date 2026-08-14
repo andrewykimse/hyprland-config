@@ -188,6 +188,7 @@ hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(lock))
 hl.bind(mod .. " + T", hl.dsp.exec_cmd(terminal .. " --class=com.btop --font-size=10 -e btop"))
 hl.bind(mod .. " + M", hl.dsp.exec_cmd(terminal .. " --class=com.hyprmoncfg -e hyprmoncfg"))
 hl.bind(mod .. " + C", hl.dsp.exec_cmd(claude_here))
+hl.bind(mod .. " + C", hl.dsp.exec_cmd(nvim_here))
 hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(browser))
 
 hl.bind(mod .. " + h", hl.dsp.layout("focus l"))
@@ -249,11 +250,11 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"), { locke
 
 -- Quickshell
 local scripts = os.getenv("HOME") .. "/.config/hypr/scripts"
-hl.bind(mod .. " + Space",  hl.dsp.exec_cmd(scripts .. "/launcher.sh"))
-hl.bind(mod .. " + V",      hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
-hl.bind(mod .. " + B",      hl.dsp.exec_cmd(scripts .. "/wallpaper.sh"))
-hl.bind(mod .. " + W",      hl.dsp.exec_cmd(scripts .. "/wallpaper-picker.sh"))
-hl.bind(mod .. " + grave",  hl.dsp.exec_cmd(scripts .. "/pill-toggle.sh"))
+hl.bind(mod .. " + Space", hl.dsp.exec_cmd(scripts .. "/launcher.sh"))
+hl.bind(mod .. " + V", hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
+hl.bind(mod .. " + B", hl.dsp.exec_cmd(scripts .. "/wallpaper.sh"))
+hl.bind(mod .. " + W", hl.dsp.exec_cmd(scripts .. "/wallpaper-picker.sh"))
+hl.bind(mod .. " + grave", hl.dsp.exec_cmd(scripts .. "/pill-toggle.sh"))
 
 hl.bind(mod .. " + Tab", function()
     hl.dispatch(hl.dsp.submap("hyprsphere"))
