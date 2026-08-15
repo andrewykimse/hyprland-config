@@ -4,11 +4,10 @@ import Quickshell.Services.Pipewire
 import "Singletons"
 
 /**
- * Mixer surface content: header with DND / Keep-Awake chips and a row of four
+ * Mixer surface content: header with DND / Keep-Awake chips and a row of
  * vertical ink-faders wired to real hardware (brightness via ddcutil for
- * external DDC monitors, brightnessctl for the internal laptop panel, vibrance
- * via nvibrant, volume and mic via Pipewire). Designed to fill the lower body
- * of the morphing pill.
+ * external DDC monitors, brightnessctl for the internal laptop panel, volume
+ * and mic via Pipewire). Designed to fill the lower body of the morphing pill.
  */
 PillSurface {
     id: root
@@ -33,8 +32,6 @@ PillSurface {
         }
         if (Devices.hasBacklight)
             out.push(blFader);
-        if (Devices.hasVibrance)
-            out.push(vibFader);
         out.push(volFader, micFader);
         return out;
     }
@@ -100,17 +97,7 @@ PillSurface {
 
     Component.onCompleted: Devices.detect()
 
-    property real pendingVibrance: -1
     property real pendingBacklight: -1
-
-    Timer {
-        id: vibDebounce
-        interval: 160
-        onTriggered: if (root.pendingVibrance >= 0) {
-            Devices.setVibrance(root.pendingVibrance);
-            root.pendingVibrance = -1;
-        }
-    }
 
     Timer {
         id: blDebounce
@@ -284,18 +271,6 @@ PillSurface {
             valueLabel: Devices.backlightPct + "%"
             onMoved: (v) => Devices.backlightPct = Math.round(v * 100)
             onCommitted: (v) => { root.pendingBacklight = v * 100; blDebounce.restart(); }
-        }
-        VFader {
-            id: vibFader
-            visible: Devices.hasVibrance
-            width: faderRow.colW
-            s: root.s
-            icon: "monitor"
-            focused: root.focusIndex === root.faders.indexOf(vibFader)
-            value: Devices.vibrance / 100
-            valueLabel: Devices.vibrance + "%"
-            onMoved: (v) => Devices.vibrance = Math.round(v * 100)
-            onCommitted: (v) => { root.pendingVibrance = v * 100; vibDebounce.restart(); }
         }
         VFader {
             id: volFader

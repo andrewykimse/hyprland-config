@@ -40,7 +40,6 @@ ShellRoot {
 
     Component.onCompleted: {
         refresh();
-        Devices.restore();
     }
 
     Binding {

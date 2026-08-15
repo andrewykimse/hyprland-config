@@ -4,14 +4,11 @@ import Quickshell
 import Quickshell.Io
 
 /**
- * Device-control bridge — single owner of the screen vibrance (nvibrant) and
- * external-monitor brightness (ddcutil) integration the mixer drives. The
- * persisted vibrance percent is the rice's source of truth: it is loaded and
- * re-applied once at startup so the saved tint survives a reboot, and every
- * later set both pushes the value to nvibrant and writes it back to the same
- * state file. DDC-capable monitors are discovered once via `ddcutil detect`
- * (one brightness fader each) rather than hardcoding I2C bus numbers, and the
- * setvcp/getvcp wire format lives here so every caller speaks it identically.
+ * Device-control bridge — owns the external-monitor brightness (ddcutil)
+ * integration the mixer drives. DDC-capable monitors are discovered once via
+ * `ddcutil detect` (one brightness fader each) rather than hardcoding I2C bus
+ * numbers, and the setvcp/getvcp wire format lives here so every caller speaks
+ * it identically.
  *
  * Laptop internal panels don't speak DDC/CI at all, so they never show up in
  * `ddcMonitors` — their brightness goes through the kernel backlight class via
@@ -20,10 +17,6 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string stateFile: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/ricelin/nvibrant-value"
-
-    property int vibrance: 40
-    property bool hasVibrance: false
     property bool hasBacklight: false
     property int backlightPct: 0
 
@@ -33,52 +26,10 @@ Singleton {
      */
     property var ddcMonitors: []
 
-    /**
-     * Loads the persisted vibrance percent and applies it once, so the saved
-     * tint is restored on boot. Singletons init lazily, so a startup caller
-     * must reference this for the restore to fire.
-     */
-    function restore() {
-        var raw = vibState.text();
-        var v = parseInt((raw || "40").trim());
-        root.vibrance = isNaN(v) ? 40 : v;
-        if (raw && raw.trim().length)
-            applyVibrance(root.vibrance);
-    }
-
-    /**
-     * Sets the screen vibrance to `pct` percent: pushes it to nvibrant and
-     * persists it to the state file. `vibrance` mirrors the last set value.
-     */
-    function setVibrance(pct) {
-        root.vibrance = Math.round(pct);
-        applyVibrance(pct);
-        saveVibrance(pct);
-    }
-
-    /**
-     * nvibrant takes one vibrance value per connector across every display,
-     * in enumeration order; connectors past the given args fall back to a
-     * neutral 0. Repeating raw covers any realistic single-panel-plus-dock
-     * setup uniformly, and it's a no-op on connectors that don't exist or
-     * aren't connected.
-     */
-    function applyVibrance(pct) {
-        var raw = Math.round(Math.max(0, Math.min(100, pct)) * 1023 / 100);
-        Quickshell.execDetached(["nvibrant", String(raw), String(raw), String(raw), String(raw)]);
-    }
-
-    function saveVibrance(pct) {
-        Quickshell.execDetached(["sh", "-c",
-            'mkdir -p "$(dirname "$1")" && printf "%s\n" "$2" > "$1"',
-            "_", root.stateFile, String(Math.round(pct))]);
-    }
-
     /** Discovers DDC-capable monitors into `ddcMonitors`. */
     function detect() {
         ddcDetect.running = true;
         backlightDetect.running = true;
-        vibranceDetect.running = true;
     }
 
     /** Writes brightness `pct` to monitor `bus` via ddcutil setvcp. */
@@ -133,36 +84,5 @@ Singleton {
                 root.backlightPct = m ? parseInt(m[1], 10) : 0;
             }
         }
-    }
-
-    /**
-     * nvibrant's ioctl path only reaches displays the NVIDIA GPU is actively
-     * scanning out to — on Optimus/PRIME laptops the internal panel is driven
-     * by the integrated GPU instead, so nvibrant silently no-ops there. This
-     * checks each DRM connector's sysfs status file under a card whose driver
-     * is "nvidia", so the fader only appears when it would actually do
-     * something.
-     */
-    Process {
-        id: vibranceDetect
-        command: ["sh", "-c",
-            "for c in /sys/class/drm/card*; do " +
-            "d=$(cat \"$c/device/uevent\" 2>/dev/null | grep -o 'DRIVER=nvidia'); " +
-            "[ -n \"$d\" ] || continue; " +
-            "cat \"$c\"-*/status 2>/dev/null; " +
-            "done"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.hasVibrance = /^connected/m.test(this.text);
-            }
-        }
-    }
-
-    FileView {
-        id: vibState
-        path: root.stateFile
-        blockLoading: true
-        printErrors: false
     }
 }
