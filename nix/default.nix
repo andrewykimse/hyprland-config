@@ -1,6 +1,11 @@
 # Home-manager module for the Hyprland desktop. Owns everything Hyprland-related
 # so that this repo is self-contained: editing a script or keybind here takes
 # effect without touching the consuming dotfiles repo.
+#
+# Curried over the flake's source inputs (see ../flake.nix) so consumers import
+# one module and never thread ricelin/hyprsphere through extraSpecialArgs.
+{ ricelin, hyprsphere }:
+
 { config, lib, pkgs, hyprScripts, ... }:
 
 let
@@ -13,6 +18,7 @@ in
     ./scripts.nix
     ./desktop.nix
     ./services.nix
+    (import ./quickshell.nix { inherit ricelin hyprsphere; })
   ];
 
   options.hyprland-config = {

@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "hyprsphere": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786485741,
+        "narHash": "sha256-zmndoL/g1nOIL8ohrL4iRVmTJdlrSA3/p+o0D0c7rN8=",
+        "owner": "66-firebat",
+        "repo": "hyprsphere",
+        "rev": "8b7875001fd57647cbf1c18e0c78aba59caff39a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "66-firebat",
+        "repo": "hyprsphere",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1786599213,
@@ -16,9 +32,27 @@
         "type": "github"
       }
     },
+    "ricelin": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1785320024,
+        "narHash": "sha256-o4p8Xxf3bn2R7CbOfvtCyjVwhEeFbgZ1m4VEmQdxekw=",
+        "owner": "Gakuseei",
+        "repo": "Ricelin",
+        "rev": "c46882f4125b992cd3b25d5cfe7d16bbcaec1c94",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Gakuseei",
+        "repo": "Ricelin",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "hyprsphere": "hyprsphere",
+        "nixpkgs": "nixpkgs",
+        "ricelin": "ricelin"
       }
     }
   },
