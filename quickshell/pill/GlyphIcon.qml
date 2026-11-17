@@ -51,6 +51,7 @@ Item {
         "inbox": { d: "M6 16v-5a6 6 0 0 1 12 0v5 M4 16h16 M10.5 20a1.8 1.8 0 0 0 3 0", fill: false },
         "leaf": { d: "M12 3c-4 2-7 6-7 10a7 7 0 0 0 14 0c0-4-3-8-7-10z M8 15c2-3 5-5 8-6", fill: false },
         "scale": { d: "M12 3v3 M5 7h14 M5 7l-3 6.5a3 3 0 0 0 6 0z M19 7l-3 6.5a3 3 0 0 0 6 0z M7 21h10", fill: false },
+        "camera": { d: "M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0z", fill: false },
         "bolt": { d: "M13 2L4 14h6l-1 8 9-12h-6z", fill: true }
     })
 

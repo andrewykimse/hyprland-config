@@ -267,6 +267,7 @@ hl.bind(mod .. " + V", hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
 hl.bind(mod .. " + B", hl.dsp.exec_cmd(scripts .. "/wallpaper.sh"))
 hl.bind(mod .. " + W", hl.dsp.exec_cmd(scripts .. "/wallpaper-picker.sh"))
 hl.bind(mod .. " + grave", hl.dsp.exec_cmd(scripts .. "/pill-toggle.sh"))
+hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd(scripts .. "/camera.sh"))
 
 hl.bind(mod .. " + Tab", function()
     hl.dispatch(hl.dsp.submap("hyprsphere"))

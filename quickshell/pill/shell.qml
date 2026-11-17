@@ -116,6 +116,7 @@ ShellRoot {
         function power(mon: string): void { root.toggleSurface(mon, "power"); }
         function link(mon: string): void { root.toggleSurface(mon, "link"); }
         function clipboard(mon: string): void { root.toggleSurface(mon, "clipboard"); }
+        function camera(mon: string): void { root.toggleSurface(mon, "camera"); }
         function wallpaper(mon: string): void { root.toggleSurface(mon, "wallpaper"); }
         function media(mon: string): void {
             if (Mpris.players.values.length > 0)

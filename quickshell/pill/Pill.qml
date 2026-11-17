@@ -41,6 +41,7 @@ Item {
     readonly property bool powerOpen: surface === "power"
     readonly property bool mediaOpen: surface === "media"
     readonly property bool linkOpen: surface === "link"
+    readonly property bool cameraOpen: surface === "camera"
     readonly property bool batteryOpen: surface === "battery"
     readonly property bool hasMedia: Mpris.players.values.length > 0
     readonly property bool hasBattery: UPower.displayDevice.isLaptopBattery && UPower.displayDevice.isPresent
@@ -70,6 +71,8 @@ Item {
     readonly property real powerH: 150 * s
     readonly property real mediaW: 390 * s
     readonly property real mediaH: 150 * s
+    readonly property real cameraW: 360 * s
+    readonly property real cameraH: 292 * s
     readonly property real batteryW: 260 * s
     readonly property real batteryH: 178 * s
     readonly property real toastW: 342 * s
@@ -82,12 +85,13 @@ Item {
         : (wallpaperOpen ? "wallpaper"
         : (powerOpen ? "power"
         : (batteryOpen ? "battery"
+        : (cameraOpen ? "camera"
         : (mediaOpen ? "media"
         : (mixerOpen ? "mixer"
         : (linkOpen ? "link"
         : (osdActive && !held ? "osd"
         : (toastActive && !held ? "toast"
-        : (expanded ? "hover" : "rest")))))))))))
+        : (expanded ? "hover" : "rest"))))))))))))
 
     signal requestSurface(string name)
     signal requestClose()
@@ -167,6 +171,7 @@ Item {
         wallpaper: () => Qt.size(wallpaperW, wallpaperH),
         power:     () => Qt.size(powerW, powerH),
         battery:   () => Qt.size(batteryW, batteryH),
+        camera:    () => Qt.size(cameraW, cameraH),
         media:     () => Qt.size(mediaW, mediaH),
         mixer:     () => Qt.size(mixerW, mixerH),
         link:      () => Qt.size(link.desiredW, link.implicitHeight + 26 * s),
@@ -341,6 +346,8 @@ Item {
             return inboxIcon.mapToItem(pill, inboxIcon.width / 2, inboxIcon.height + drop * 0.55);
         if (soulTarget === "mixer")
             return mixerIcon.mapToItem(pill, mixerIcon.width / 2, mixerIcon.height + drop * 0.55);
+        if (soulTarget === "camera")
+            return cameraIcon.mapToItem(pill, cameraIcon.width / 2, cameraIcon.height + drop * 0.55);
         if (soulTarget === "power")
             return powerIcon.mapToItem(pill, powerIcon.width / 2, powerIcon.height + drop * 0.55);
         if (soulTarget === "ws" && soulWsIndex >= 0) {
@@ -735,6 +742,31 @@ Item {
                 }
 
                 Item {
+                    id: cameraIcon
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 17 * pill.s
+                    height: 17 * pill.s
+
+                    GlyphIcon {
+                        anchors.fill: parent
+                        name: "camera"
+                        color: cameraArea.containsMouse ? Theme.cream : Theme.iconDim
+                        stroke: 1.7
+                    }
+
+                    MouseArea {
+                        id: cameraArea
+                        anchors.fill: parent
+                        anchors.margins: -6 * pill.s
+                        hoverEnabled: true
+                        enabled: hover.live
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: pill.requestSurface("camera")
+                        onContainsMouseChanged: if (containsMouse) pill.soulTarget = "camera"
+                    }
+                }
+
+                Item {
                     id: powerIcon
                     anchors.verticalCenter: parent.verticalCenter
                     width: 17 * pill.s
@@ -820,6 +852,14 @@ Item {
         id: media
         s: pill.s
         open: pill.mediaOpen
+        morphCloseness: pill.morphCloseness
+        onRequestClose: pill.requestClose()
+    }
+
+    Camera {
+        id: camera
+        s: pill.s
+        open: pill.cameraOpen
         morphCloseness: pill.morphCloseness
         onRequestClose: pill.requestClose()
     }
