@@ -18,6 +18,7 @@ in
       brightnessctl
       playerctl
       pavucontrol
+      pulsemixer
     ] ++ [ wf-recorder ];
 
     # Registers hyprland.portal in the profile's portal dir and points the frontend
